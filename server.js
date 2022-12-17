@@ -39,6 +39,14 @@ app.delete("/todos", (req,res) => {
    });
 });
 
+//get to know the method which is not implemented
+app.all("/todos", (req,res) => {
+   res.status(501).send();             
+});
+// shows not found for those routes not defined, and the general case should be explained at the last
+app.all("*", (req,res) => {
+   res.status(404).send();             
+});
 
 app.listen(port, () => {
   console.log(`Node js server started on ${port}`);
