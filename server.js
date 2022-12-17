@@ -1,56 +1,53 @@
-// basic server
- const http = require("http");
- const port = 8081;
-const toDoList= ["Need to learn","Need to code"];
+// server with express
 
- // To run: http://localhost:8081 
-//http://localhost:8081/todos 
+const express = require("express");
+const app = express();     //initialization
+app.use(express.json());   // so that application can use json format (each req and res will be triggered in json format)
 
-http.createServer((req,res) =>{
-   const {method, url} = req;
-   if(url ==="/todos"){         
-      if(method === "GET"){
-         res.writeHead(200,{"Content-Type": "text/html"});
-         res.write(toDoList.toString());
-      } else if(method === "POST"){
-         let body = "";
-         req.on("error",(err) =>{
-            console.log(err);
-         }).on('data',(chunk)=>{
-            body+=chunk;
-         }).on('end',() =>{
-            body= JSON.parse(body);
-            let newToDo = toDoList;
-            newToDo.push(body.item);
-            console.log(newToDo);
-            res.writeHead(201);
-         });
-      } else if(method === "DELETE"){
-         let body = "";
-         req.on('error',(err) =>{
-            console.log(err);
-         }).on('data',(chunk)=>{
-            body+=chunk;
-         }).on('end',() =>{
-            body= JSON.parse(body);
-            let delete_item = body.item;
-            for(let i = 0; i<toDoList.length; i++){
-               if(toDoList[i] === delete_item){
-                  toDoList.splice(i,1);
-                  break;
-               }
-            }
-            res.writeHead(201);
-         });
-      } 
-      else {
-         res.write(501);
-      }
-   }else{
-      res.write(404);
-   }
-   res.end();
+const port = 8081;
+const toDoList = ["Need to learn", "Need to code"];
 
-}).listen(port,() => {
-   console.log(`My node.js server started on port ${port}`);
+// creating the route todos => http://localhost:8081/todos
+ 
+app.get("/todos", (req,res) => {
+
+  res.status(200).send(toDoList);
+});
+
+//We can add new item from body with the post method but it will get vanished once the server is refreshed, that is the changes are not persistent
+app.post("/todos", (req,res) =>{
+  
+   let newToDoItem = req.body.item;
+  toDoList.push(newToDoItem);
+  res.status(201).send({
+   message: "The new item got added successfully"
+});
+
+});
+
+app.delete("/todos", (req,res) => {
+
+   const ItemToDelete = req.body.item;
+   toDoList.find((element,index) => {
+    if(element === ItemToDelete){
+      toDoList.splice(index,1);
+    }
+   });
+
+   res.status(202).send({
+     message : "Deleted item `${req.body.item}`"
+   });
+});
+
+//get to know the method which is not implemented
+app.all("/todos", (req,res) => {
+   res.status(501).send();             
+});
+// shows not found for those routes not defined, and the general case should be explained at the last
+app.all("*", (req,res) => {
+   res.status(404).send();             
+});
+
+app.listen(port, () => {
+  console.log(`Node js server started on ${port}`);
 });
